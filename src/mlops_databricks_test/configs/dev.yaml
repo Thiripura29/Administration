@@ -1,8 +1,8 @@
-platform: databricks
+platform: local
 environment: dev
-catalog_name: mlops
-database: test
-package_name: mlops_databricks_test
+catalog_name: lakehouse_dev
+database: administration
+package_name: administration
 package_version: 0.1
 audit_control_stores:
   - name: "loan_approval_audit_control_store"
