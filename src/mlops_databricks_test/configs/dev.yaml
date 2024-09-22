@@ -5,14 +5,14 @@ database: administration
 package_name: administration
 package_version: 0.1
 audit_control_stores:
-  - name: "loan_approval_audit_control_store"
+  - name: "administration_audit_control_store"
     type: "delta"
     configs:
-      audit_table: "lakehouse_dev.delta.mlops_audit"
+      audit_table: "lakehouse_dev.administration.mlops_audit"
 entry_points:
-  - staging_bronze_loan_approval:
+  - administration_jdbc_organizations_bronze_task:
       type: source-sink
-      audit_control_store_name: loan_approval_audit_control_store
+      audit_control_store_name: administration_audit_control_store
       input_parameters:
         - name: 'parameter1'
           type: str
@@ -28,17 +28,18 @@ entry_points:
         spark.driver.memory: 4g
         spark.executor.memory: 4g
       data_sources:
-        - source_name: "staging_bronze_loan_approval_source"
-          ingestion_type: incremental
+        - source_name: "administration_jdbc_organizations_bronze_datasource"
+          ingestion_type: full_load
           dataframe_type: spark
-          format: csv
-          path: "s3a://prudhvi-08052024-test/staging/loan_approval/loan_approval_dataset.csv"
-          tmp_view_name: "tmp1"
+          format: jdbc
           dataframe_options:
-            inferSchema: true
-            header: true
+          url: "jdbc:mysql:my-infra-mysql.cze4w0umyt03.ap-south-1.rds.amazonaws.com"
+          user: "root"
+          password: "root12345"
+          driver: 'com.mysql.cj.jdbc.Driver'
+          query:  "select * from healthcare.organizations"
       transformations:
-        entry_point_function_path: staging_bronze_loan_approval.function.main
+        entry_point_function_path:  "administration_jdbc_organizations_bronze_task.organization_entrypoint.main"
         sql_transformation_configs:
           - transformation_name: "sql_transformation"
             execution_type: "pre_function"
@@ -52,17 +53,15 @@ entry_points:
                 exclude_col: salary|gender
               - col2_name: "lit('abc')"
       data_sinks:
-        - sink_name: "bronze_loan_approval_delta_sink"
+        - sink_name: "administration_delta_bronze_organization_sink"
           dataframe_type: spark
-          type: spark_sink
           format: delta
-          path: "s3a://prudhvi-08052024-test/bronze/loan_approval"
-          partitionBy:
-            - education
+          path: "s3://lakehouse-administration1/bronze/organizations/"
           dataframe_options:
             optimizeWrite: true
             autoCompact: true
             dataChange: true
+          Table name : "lakehouse_dev.administration.organizations"
   - bronze_silver_dq_loan_approval:
       audit_control_store_name: loan_approval_audit_control_store
       type: source-sink

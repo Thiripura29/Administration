@@ -2,7 +2,7 @@ from pyspark.sql import functions as F
 
 
 def main(df_dict, config_object):
-    loan_approval_df = df_dict['staging_bronze_loan_approval_source']
+    loan_approval_df = df_dict['organizations']
     # Get a list of all column names
     columns = loan_approval_df.columns
 
